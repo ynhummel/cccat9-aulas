@@ -1,12 +1,8 @@
 require 'segment'
 require 'date'
+require 'fare_calculator_factory'
 
 class Ride
-  NORMAL_FARE = 2.1
-  OVERNIGHT_FARE = 3.9
-  SUNDAY_FARE = 2.9
-  OVERNIGHT_SUNDAY_FARE = 5
-  FIRST_DAY_FARE = 1.5
   MIN_FARE = 10
 
   def initialize
@@ -20,30 +16,8 @@ class Ride
   def calculate_fare
     fare = 0
     @segments.each do |segment|
-      if segment.special_day?
-        fare += segment.distance * FIRST_DAY_FARE
-        next
-      end
-
-      if segment.overnight? && !segment.sunday?
-        fare += segment.distance * OVERNIGHT_FARE
-        next
-      end
-
-      if segment.overnight? && segment.sunday?
-        fare += segment.distance * OVERNIGHT_SUNDAY_FARE
-        next
-      end
-
-      if !segment.overnight? && segment.sunday?
-        fare += segment.distance * SUNDAY_FARE
-        next
-      end
-
-      if !segment.overnight? && !segment.sunday?
-        fare += segment.distance * NORMAL_FARE
-        next
-      end
+      fare_calculator = FareCalculatorFactory.create(segment: segment)
+      fare += fare_calculator.calculate(segment: segment)
     end
     fare < MIN_FARE ? MIN_FARE : fare
   end
